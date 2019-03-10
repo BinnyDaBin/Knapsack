@@ -1,16 +1,24 @@
 import java.util.ArrayList;
-
+// Based on algorithm 6.1 on textbook
+/**
+ * @author Allegra Allgeier, Binny Lee, Jane Delmonico
+ *
+ *This class performs the Breadth-first branch-and-bound following the 
+ *based on algorithm 6.1. 
+ *
+ */
 public class BreadthFirstBB {
 
-	//items each with 3 numbers: item number(index 0), profit(index 1), weight (index 2)
-	// index correspond to item number
-	// I changed the item id in the sample.dad file so it'll start from 0.
+	// arraylist of Items
 	ArrayList<Item> items;
 	// n: number of items
 	int n;
 	// W: total weight limit.
 	int W;
 		
+	/**
+	 * Constructor
+	 */
 	BreadthFirstBB(String filename)
 	{
 		InputReader reader = new InputReader("sample.dat");
@@ -27,20 +35,16 @@ public class BreadthFirstBB {
 		// sort items according to p_over_w in non-increasing order
 		items = mergesort(n, items);
 		
-		for (int i = 0; i< n; i++)
-		{
-			System.out.println(items.get(i).getP_over_W());
-			
-		}
-		
 	}
 	
 	/**
 	 * 
-	 *  SORTS IN NON INCREASING ORDER!!
-	 * @param n
-	 * @param S
-	 * @return
+	 * Performs mergesort to sort Item objects according to
+	 * profit/weight in non-decreasing order.
+	 * 
+	 * @param n - number of items
+	 * @param S - arraylist of items to be sorted
+	 * @return sorted arraylist 
 	 */
 	private ArrayList<Item> mergesort(int n, ArrayList<Item> S)
 	{
@@ -75,11 +79,8 @@ public class BreadthFirstBB {
 	}
 	
 	/**
-	 * This function merges two sorted arrays into one sorted array.
-	 * This function is based on the pseudo-code given in 
-	 * our textbook.
 	 * 
-	 * SORTS IN NON INCREASING ORDER!!
+	 * This function merges two sorted arrays into one sorted array.
 	 * 
 	 * ++++Tested++++
 	 * @param h - number of elements in U
@@ -134,6 +135,89 @@ public class BreadthFirstBB {
 		}	
 		return R;			
 	}
+	
+	/**
+	 * This method solves the 0-1 Knapsack problem using breadth-first branch-and-bound.
+	 * The algorithm is based on the pseudo-code provided in our textbook.
+	 * @return maxprofit
+	 */
+	public int solveKnapsack()
+	{
+		Node u, v;
+		int uLevel, uWeight, uProfit;
+		// queue of items
+		LLQueue<Node> queue = new LLQueue<Node>();
+		// keep track of max profit
+		int maxprofit = 0;
+		// root
+		Node root = new Node(0, 0, 0);
+		// enqueue root 
+		queue.enqueue(root);
+		while (! queue.isEmpty())
+		{
+			v = queue.dequeue();
+			
+			// left child
+			uLevel = v.getLevel() +1;
+			uProfit = v.getProfit() + items.get(uLevel-1).getProfit();
+			uWeight = v.getWeight() + items.get(uLevel-1).getWeight();
+	
+			u = new Node(uLevel, uProfit, uWeight);
+			if (uWeight  <= W && uProfit > maxprofit)
+				maxprofit = uProfit;
+			if (bound(u) > maxprofit)
+				queue.enqueue(u);
+			
+			// right child
+			uWeight = v.getWeight();
+			uProfit = v.getProfit();		
+			u = new Node(uLevel, uProfit, uWeight);
+			if (bound(u) > maxprofit)
+				queue.enqueue(u);
+			
+		}
+		
+		return maxprofit;
+		
+	}
+	
+	/**
+	 * This method calculates the bound value of each node.
+	 * The algorithm is based on the pseudo-code provided in our textbook.
+	 * @param Node - u
+	 * @return bound value
+	 */
+	private double bound(Node u)
+	{
+		int j, k;
+		int totweight;
+		double bound;
+		if (u.getWeight() >= this.W)
+			return 0;
+		else
+		{
+			bound = u.getProfit();
+			j = u.getLevel() + 1;
+			totweight = u.getWeight();
+			while (j <= this.n && totweight + items.get(j-1).getWeight() <= this.W)
+			{
+				totweight += items.get(j-1).getWeight();
+				bound += items.get(j-1).getProfit();
+				j++;
+			}
+			k = j;
+			if (k <= this.n)
+			{
+				bound += (W-totweight)* items.get(j-1).getP_over_W();
+			}
+			
+			return bound;
+		}
+				
+	}
+	
+	
+	
 	
 
 }
